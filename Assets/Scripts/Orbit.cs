@@ -114,7 +114,7 @@ public class Orbit : MonoBehaviour {
     {
         //Should only hit the orbital path collider to check where the cadet would intercept it
         int orbitMask = 1 << 8;
-        return (Physics.Raycast(cadet.transform.position, cadet.transform.up, out hit, 10f, orbitMask));
+        return (Physics.Raycast(cadet.transform.position, cadet.transform.up, out hit, 50f, orbitMask));
     }
 
     //The Z rotation of the orbit hit point needs to be locked at 0 or 180
