@@ -7,10 +7,10 @@ public class Orbit : MonoBehaviour {
 
     public CadetController cadet;
     public SphereCollider orbitalPath;
-    public float targetRotationsPerSecond = 4f;
-    public float secondsToAdjustToTargetRotations = 2f;
+    public float secondsToAdjustToTargetRotations = 1f;
 
-    private float currentRotationsPerSecond;
+    private float targetSecondsPerRotation = 1f;
+    private float currentSecondsPerRotation;
     private int currentOrbitEntryAngle;
     private Vector3 currentOrbitRotation;
     private float orbitalPathCircumference;
@@ -18,7 +18,7 @@ public class Orbit : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
         orbitalPath.gameObject.SetActive(false);
-        currentRotationsPerSecond = targetRotationsPerSecond;
+        currentSecondsPerRotation = targetSecondsPerRotation;
         currentOrbitRotation = Vector3.zero;
         orbitalPathCircumference = 2 * Mathf.PI * orbitalPath.radius * orbitalPath.transform.lossyScale.x;
 	}
@@ -30,7 +30,7 @@ public class Orbit : MonoBehaviour {
             //Activate the orbital path so we can check if the cadet will intersect it
             orbitalPath.gameObject.SetActive(true);
             //Set the initial orbit speed to match the players current speed
-            currentRotationsPerSecond = orbitalPathCircumference / cadet.CurrentSpeed();
+            currentSecondsPerRotation = orbitalPathCircumference / cadet.CurrentSpeed();
             //Set whether the orbit should be clockwise or anticlockwise
             currentOrbitEntryAngle = CalculateOrbitDirection();
             UpdateCurrentOrbitRotation();
@@ -43,29 +43,29 @@ public class Orbit : MonoBehaviour {
     {
         if (other.CompareTag("Player"))
         {
-            //Deactiate this planets orbital path so it can't be accidentally hit from another planets orbit
+            //Deactivate this planets orbital path so it can't be accidentally hit from another planets orbit
             orbitalPath.gameObject.SetActive(false);
         }
     }
 
     private void UpdateCurrentOrbitRotation()
     {
-        currentOrbitRotation.z = (360f / currentRotationsPerSecond) * currentOrbitEntryAngle;
+        currentOrbitRotation.z = (360f / currentSecondsPerRotation) * currentOrbitEntryAngle;
     }
 
     void Update () {
         if (cadet.IsOrbitting(this))
         {
             //Lerp towards the target orbit speed if not already there
-            if (currentRotationsPerSecond != targetRotationsPerSecond)
+            if (currentSecondsPerRotation != targetSecondsPerRotation)
             {
-                if (Mathf.Abs(currentRotationsPerSecond - targetRotationsPerSecond) < 0.1f)
+                if (Mathf.Abs(currentSecondsPerRotation - targetSecondsPerRotation) < 0.1f)
                 {
-                    currentRotationsPerSecond = targetRotationsPerSecond;
+                    currentSecondsPerRotation = targetSecondsPerRotation;
                 }
                 else
                 {
-                    currentRotationsPerSecond = Mathf.Lerp(currentRotationsPerSecond, targetRotationsPerSecond, Time.deltaTime / secondsToAdjustToTargetRotations);                   
+                    currentSecondsPerRotation = Mathf.Lerp(currentSecondsPerRotation, targetSecondsPerRotation, Time.deltaTime / secondsToAdjustToTargetRotations);                   
                 }
                 UpdateCurrentOrbitRotation();
             }
@@ -86,7 +86,7 @@ public class Orbit : MonoBehaviour {
             Vector3.Dot(Vector3.forward, Vector3.Cross(pathToPlanetCentre, currentPath)),
             Vector3.Dot(pathToPlanetCentre, currentPath)) * Mathf.Rad2Deg;
 
-        return orbitEntryAngle > 0f ? -1 : 1;
+        return orbitEntryAngle >= 0f ? -1 : 1;
     }
 
     private void SmoothEntryToOrbitalPath(int orbitEntryAngle)
@@ -129,7 +129,12 @@ public class Orbit : MonoBehaviour {
     //Return the current movement speed of the cadet orbiting this planet
     public float CurrentMoveSpeed()
     {
-        return orbitalPathCircumference / currentRotationsPerSecond;
+        return orbitalPathCircumference / currentSecondsPerRotation;
+    }
+
+    public void SetTargetRotationsPerSecond(float newTarget)
+    {
+        targetSecondsPerRotation = newTarget;
     }
 
 }
